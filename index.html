@@ -1,0 +1,1225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>America's Dams</title>
+<meta name="description" content="Every dam in the National Inventory of Dams: when it was built, how old it is, what it's for, and how high-hazard dams are managed, state by state.">
+<style>
+  :root {
+    color-scheme: light;
+    --page: #f9f9f7; --surface: #fcfcfb; --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
+    --grid: #e1e0d9; --axis: #c3c2b7; --border: rgba(11, 11, 11, 0.10);
+    --land: #f1f0ec; --state-line: #d9d7cf; --wash: rgba(11, 11, 11, 0.05);
+    --unknown: #c9c8c1; --series: #2a78d6;
+    --a0: #86b6ef; --a1: #5598e7; --a2: #2a78d6; --a3: #1c5cab; --a4: #104281;
+    --h0: #ff996e; --h1: #e76530; --h2: #a63c09;
+    --removed: #12946a; --standing: #d3d2cb;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+      --grid: #2c2c2a; --axis: #383835; --border: rgba(255, 255, 255, 0.10);
+      --land: #222220; --state-line: #34342f; --wash: rgba(255, 255, 255, 0.06);
+      --unknown: #4b4b46; --series: #3987e5;
+      --a0: #256abf; --a1: #3987e5; --a2: #6da7ec; --a3: #9ec5f4; --a4: #cde2fb;
+      --h0: #a63c09; --h1: #e76530; --h2: #ffa076;
+      --removed: #199e70; --standing: #3b3b37;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --axis: #383835; --border: rgba(255, 255, 255, 0.10);
+    --land: #222220; --state-line: #34342f; --wash: rgba(255, 255, 255, 0.06);
+    --unknown: #4b4b46; --series: #3987e5;
+    --a0: #256abf; --a1: #3987e5; --a2: #6da7ec; --a3: #9ec5f4; --a4: #cde2fb;
+    --h0: #a63c09; --h1: #e76530; --h2: #ffa076;
+    --removed: #199e70; --standing: #3b3b37;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--page); color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif; line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 28px 16px 48px; }
+  .kicker { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; margin: 0 0 8px; }
+  h1 { font-size: clamp(28px, 4.6vw, 44px); line-height: 1.12; margin: 0 0 10px; font-weight: 650; letter-spacing: -0.01em; max-width: 30ch; text-wrap: balance; }
+  .dek { color: var(--ink-2); margin: 0 0 8px; max-width: 72ch; font-size: 16px; }
+  .byline { font-size: 14px; color: var(--muted); margin: 0 0 22px; }
+  .byline a { color: var(--ink-2); font-weight: 600; text-decoration: none; }
+  .byline a:hover { text-decoration: underline; }
+  h2.section { font-size: 22px; margin: 34px 0 6px; font-weight: 650; }
+  p.section-dek { color: var(--ink-2); margin: 0 0 14px; max-width: 72ch; }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 18px; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+  .stat .label { font-size: 13px; color: var(--ink-2); }
+  .stat .value { font-size: 28px; font-weight: 600; margin-top: 2px; }
+  .stat .sub { font-size: 12px; color: var(--muted); }
+
+  .controls { display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap; margin: 0 0 12px; }
+  button, select {
+    font: inherit; font-size: 14px; color: var(--ink); background: var(--surface);
+    border: 1px solid var(--border); border-radius: 8px; padding: 7px 12px; cursor: pointer;
+  }
+  button:hover { background: var(--wash); }
+  button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--series); outline-offset: 2px; }
+  .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .seg button { border: 0; border-radius: 0; background: var(--surface); }
+  .seg button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+  .slider { flex: 1 1 240px; display: flex; align-items: center; gap: 10px; }
+  .slider input { flex: 1; accent-color: var(--series); }
+  .year-label { font-weight: 600; min-width: 46px; font-variant-numeric: tabular-nums; }
+  .ctl-label { font-size: 13px; color: var(--ink-2); }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 18px; position: relative; }
+  .card h3 { font-size: 16px; margin: 0 0 4px; font-weight: 600; }
+  .card .note { font-size: 13px; color: var(--ink-2); margin: 0 0 10px; }
+  .grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+  @media (max-width: 760px) { .grid2 { grid-template-columns: 1fr; } }
+  .grid2 .card { margin-bottom: 0; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--ink-2); margin-bottom: 8px; align-items: center; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .legend .hint { color: var(--muted); }
+
+  .map-wrap { position: relative; }
+  #map { width: 100%; display: block; aspect-ratio: 975 / 610; cursor: grab; touch-action: pan-y; border-radius: 8px; }
+  .map-hint { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  #map.dragging { cursor: grabbing; }
+  .counter { position: absolute; left: 10px; bottom: 8px; pointer-events: none; padding: 4px 8px; border-radius: 8px; background: color-mix(in srgb, var(--surface) 78%, transparent); }
+  .counter .y { font-size: clamp(26px, 4vw, 40px); font-weight: 650; line-height: 1; }
+  .counter .c { font-size: 13px; color: var(--ink-2); }
+  @media (max-width: 600px) {
+    .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .stat .value { font-size: 22px; }
+    .counter { position: static; background: none; padding: 6px 0 0; display: flex; align-items: baseline; gap: 8px; }
+    .counter .y { font-size: 20px; }
+    .counter .c { font-size: 12px; }
+    .zoom { right: 4px; top: 4px; gap: 4px; }
+    .zoom button { width: 28px; height: 28px; font-size: 15px; }
+  }
+  .zoom { position: absolute; right: 8px; top: 8px; display: flex; flex-direction: column; gap: 6px; }
+  .zoom button { width: 34px; height: 34px; padding: 0; font-size: 18px; line-height: 1; }
+  .map-msg { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; text-align: center; padding: 20px; color: var(--ink-2); background: color-mix(in srgb, var(--surface) 80%, transparent); border-radius: 8px; }
+  .map-msg.on { display: flex; }
+
+  .tooltip {
+    position: absolute; pointer-events: none; z-index: 5; display: none;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 9px 11px; font-size: 13px; box-shadow: 0 6px 20px rgba(0,0,0,0.14);
+    min-width: 200px; max-width: 290px;
+  }
+  .tooltip .big { font-size: 15px; font-weight: 650; }
+  .tooltip .name { color: var(--ink-2); margin-top: 2px; }
+  .tooltip .meta { color: var(--muted); font-size: 12px; margin-top: 4px; }
+  .tooltip .kv { margin-top: 3px; }
+  .tooltip .kv b { font-weight: 600; }
+
+  .near { margin-top: 12px; display: none; }
+  .near.on { display: block; }
+
+  .bars { display: grid; gap: 7px; }
+  .bar-row { display: grid; grid-template-columns: minmax(120px, 38%) 1fr auto; gap: 10px; align-items: center; font-size: 13px; }
+  .bar-row .lab { color: var(--ink-2); }
+  .bar-row .track { height: 12px; }
+  .bar-row .fill { height: 12px; border-radius: 0 4px 4px 0; background: var(--series); min-width: 2px; }
+  .bar-row .val { font-variant-numeric: tabular-nums; color: var(--ink); white-space: nowrap; }
+  .bar-row .val span { color: var(--muted); }
+
+  svg.chart { width: 100%; display: block; overflow: visible; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--grid); }
+  th { color: var(--ink-2); font-weight: 600; font-size: 13px; vertical-align: bottom; }
+  th.sortable { cursor: pointer; user-select: none; }
+  th.sortable:hover { color: var(--ink); }
+  th[aria-sort="ascending"]::after { content: " ▲"; font-size: 10px; }
+  th[aria-sort="descending"]::after { content: " ▼"; font-size: 10px; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  #scorecard tbody tr { cursor: pointer; }
+  #scorecard tbody tr:hover, #scorecard tbody tr.sel { background: var(--wash); }
+  .table-scroll { overflow-x: auto; max-height: 560px; overflow-y: auto; }
+  .table-scroll thead th { position: sticky; top: 0; background: var(--surface); }
+  details { margin-top: 10px; font-size: 14px; }
+  details summary { cursor: pointer; color: var(--ink-2); }
+  .card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+
+  .method { font-size: 14px; color: var(--ink-2); }
+  .method h3 { color: var(--ink); }
+  .method li { margin-bottom: 6px; }
+  .method a, footer a { color: var(--ink-2); }
+  footer { font-size: 13px; color: var(--muted); margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="kicker">America's dams</p>
+  <h1 id="headline">Loading the National Inventory of Dams…</h1>
+  <p class="dek" id="dek">Every dam in the U.S. Army Corps of Engineers' National Inventory of Dams: when it was built, how old it is, what it's for, and who owns it. Press play to watch the country build them.</p>
+  <p class="byline">By <a href="https://shantanubhide.com/">Shantanu Bhide</a> · <span id="dataDate">National Inventory of Dams</span></p>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="controls" role="group" aria-label="Map controls">
+    <button id="play" type="button">▶ Play</button>
+    <div class="slider">
+      <label for="year" class="year-label" id="yearLabel">2026</label>
+      <input id="year" type="range" min="1800" max="2026" value="2026" aria-label="Show dams completed by this year">
+    </div>
+    <span class="ctl-label">Color by</span>
+    <div class="seg" role="group" aria-label="Color dams by">
+      <button type="button" data-mode="age" aria-pressed="true">Age</button>
+      <button type="button" data-mode="hazard" aria-pressed="false">Hazard potential</button>
+      <button type="button" data-mode="removals" aria-pressed="false">Removals</button>
+    </div>
+    <select id="state" aria-label="Choose a state"><option value="">All states</option></select>
+    <button id="nearme" type="button">Dams near me</button>
+    <button id="save" type="button">Save image</button>
+  </div>
+
+  <div class="card" id="mapCard">
+    <div class="legend" id="legend"></div>
+    <div class="map-wrap">
+      <canvas id="map" role="img" aria-label="Map of dams in the lower 48 states"></canvas>
+      <div class="counter"><div class="y" id="ctrYear">2026</div><div class="c" id="ctrCount"></div></div>
+      <div class="zoom">
+        <button type="button" id="zin" aria-label="Zoom in">+</button>
+        <button type="button" id="zout" aria-label="Zoom out">−</button>
+        <button type="button" id="zreset" aria-label="Show the whole country" title="Whole country">⤢</button>
+      </div>
+      <div class="map-msg" id="mapMsg"></div>
+    </div>
+    <p class="map-hint">Hover a dot for details. Drag to pan; zoom with the + and − buttons, a pinch, or Ctrl/⌘ + scroll.</p>
+    <div class="tooltip" id="mapTip"></div>
+    <div class="near" id="near">
+      <h3>The five dams closest to you</h3>
+      <p class="note">Your location stays in your browser; it is not sent anywhere.</p>
+      <div class="table-scroll"><table id="nearTable"></table></div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="card" id="decadeCard">
+      <h3>Dams completed per decade</h3>
+      <p class="note" id="decadeNote"></p>
+      <svg class="chart" id="decadeChart" height="230"></svg>
+      <div class="tooltip" id="decadeTip"></div>
+      <details><summary>Show as a table</summary><div class="table-scroll"><table id="decadeTable"></table></div></details>
+    </div>
+    <div class="card" id="agingCard">
+      <h3>The aging wave: share of dams 50 years or older</h3>
+      <p class="note">Among dams with a known completion year. The lighter line assumes no dams are added or removed.</p>
+      <svg class="chart" id="agingChart" height="230"></svg>
+      <div class="tooltip" id="agingTip"></div>
+    </div>
+    <div class="card">
+      <h3>What are they for?</h3>
+      <p class="note">Primary purpose listed for each dam.</p>
+      <div class="bars" id="purposeBars"></div>
+    </div>
+    <div class="card">
+      <h3>Who owns them?</h3>
+      <p class="note">Primary owner type. Most U.S. dams are privately owned.</p>
+      <div class="bars" id="ownerBars"></div>
+    </div>
+  </div>
+
+  <section id="removalSection" hidden>
+    <h2 class="section">The removal era</h2>
+    <p class="section-dek" id="remDek">Dams that are unsafe, obsolete or blocking fish are increasingly taken out entirely. These are the removals tracked by American Rivers. Pick "Removals" above the map to see where they happened.</p>
+    <div class="stats" id="remStats"></div>
+    <div class="grid2">
+      <div class="card" id="remCard">
+        <h3>Dam removals per year</h3>
+        <p class="note" id="remNote"></p>
+        <svg class="chart" id="remChart" height="230"></svg>
+        <div class="tooltip" id="remTip"></div>
+      </div>
+      <div class="card">
+        <h3>Why were they removed?</h3>
+        <p class="note" id="reasonNote"></p>
+        <div class="bars" id="reasonBars"></div>
+      </div>
+    </div>
+  </section>
+
+  <h2 class="section">For dam safety professionals</h2>
+  <p class="section-dek" id="proDek">High-hazard-potential dams are those whose failure would probably cost lives. That rating describes what is downstream, not the dam's condition. These figures summarize what owners and regulators report to the inventory.</p>
+  <div class="stats" id="proStats"></div>
+
+  <div class="grid2">
+    <div class="card" id="hhCard">
+      <h3>High-hazard dams by decade completed</h3>
+      <p class="note" id="hhNote"></p>
+      <svg class="chart" id="hhChart" height="230"></svg>
+      <div class="tooltip" id="hhTip"></div>
+    </div>
+    <div class="card">
+      <h3>Condition of high-hazard dams</h3>
+      <p class="note">Latest condition assessment reported to the inventory. Many dams are not yet rated.</p>
+      <div class="bars" id="conditionBars"></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:18px">
+    <div class="card-head">
+      <div>
+        <h3>State scorecard</h3>
+        <p class="note">Click a column to sort, or a row to show that state on the map. EAP = Emergency Action Plan. Inspection share counts dams with a reported inspection date.</p>
+      </div>
+      <button id="download" type="button">Download CSV</button>
+    </div>
+    <div class="table-scroll"><table id="scorecard"></table></div>
+  </div>
+
+  <div class="card method">
+    <h3>About the data</h3>
+    <ul>
+      <li><b>Source.</b> <a href="https://nid.sec.usace.army.mil/" rel="noopener">National Inventory of Dams</a> (U.S. Army Corps of Engineers), data updated <span class="dataDateText"></span>. The inventory covers dams that meet federal size or hazard criteria; many small farm ponds are not included.</li>
+      <li><b>Counting.</b> Associated structures (saddle dams and dikes listed under a main dam) are counted with their main dam, so each dam appears once. Totals include Alaska, Hawaii, Puerto Rico and Guam; the map shows the lower 48.</li>
+      <li><b>Age.</b> Based on the year completed, ignoring later modifications. The year is unknown for <span id="unknownText"></span> dams, which are left out of age figures.</li>
+      <li><b>Hazard potential</b> follows federal guidelines. High: failure would probably cause loss of life. Significant: no probable loss of life, but economic, environmental or lifeline damage. Low: little loss beyond the owner's property. It describes consequences, not condition or likelihood of failure.</li>
+      <li><b>Condition, inspections and Emergency Action Plans</b> are self-reported by owners and regulators, are often out of date or blank, and are shown here only as totals, never for individual dams.</li>
+      <li id="removalSource" hidden><b>Removals.</b> <a href="https://doi.org/10.6084/m9.figshare.5234068" rel="noopener">American Rivers Dam Removal Database</a> (CC BY 4.0), updated <span id="remUpdated"></span>: removals American Rivers knows of in which the dam was taken out for its full height. Years, reasons and river miles are as reported by contributors; border dams count for each state. <span id="remStill"></span></li>
+      <li><b>Not an official product.</b> An independent analysis of public data. For any specific dam, contact its owner or the state dam safety program.</li>
+    </ul>
+  </div>
+  <footer>Built by <a href="https://shantanubhide.com/">Shantanu Bhide</a>, water resources engineer.</footer>
+</div>
+
+<script>
+(() => {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const NS = "http://www.w3.org/2000/svg";
+  const el = (tag, attrs = {}, parent) => {
+    const n = document.createElementNS(NS, tag);
+    for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
+    if (parent) parent.appendChild(n);
+    return n;
+  };
+  const div = (cls, text) => { const d = document.createElement("div"); if (cls) d.className = cls; if (text != null) d.textContent = text; return d; };
+  const cssVar = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const fmt = (n) => (n == null ? "—" : Math.round(n).toLocaleString("en-US"));
+  const fmtPct = (n) => (n == null ? "—" : Math.round(n) + "%");
+  const fmtDate = (iso) => new Date(iso + "T00:00:00Z").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
+
+  // ---------------- projection (same Albers settings as scripts/albers.py) ----------------
+  const D = Math.PI / 180, P1 = 29.5 * D, P2 = 45.5 * D, P0 = 23 * D, L0 = -96 * D;
+  const NN = (Math.sin(P1) + Math.sin(P2)) / 2, CC = Math.cos(P1) ** 2 + 2 * NN * Math.sin(P1);
+  const R0 = Math.sqrt(CC - 2 * NN * Math.sin(P0)) / NN, SCALE = 1268.5, XOFF = 497.7, MW = 975, MH = 610;
+  const raw = (lon, lat) => {
+    const rho = Math.sqrt(Math.max(CC - 2 * NN * Math.sin(lat * D), 0)) / NN, th = NN * (lon * D - L0);
+    return [rho * Math.sin(th), R0 - rho * Math.cos(th)];
+  };
+  const YC = (raw(-96, 24.5)[1] + raw(-96, 49.4)[1]) / 2 + 0.0302;
+  const project = (lon, lat) => { const [x, y] = raw(lon, lat); return [XOFF + x * SCALE, MH / 2 - (y - YC) * SCALE]; };
+  const inConus = (lon, lat) => lon >= -125 && lon <= -66.5 && lat >= 24 && lat <= 49.6;
+
+  // ---------------- categories ----------------
+  const AGE_CLASSES = [
+    { label: "Under 25 years", v: "--a0" }, { label: "25–49", v: "--a1" }, { label: "50–74", v: "--a2" },
+    { label: "75–99", v: "--a3" }, { label: "100+ years", v: "--a4" }, { label: "Year unknown", v: "--unknown" },
+  ];
+  const HAZ_CLASSES = [
+    { label: "Low", v: "--h0" }, { label: "Significant", v: "--h1" }, { label: "High", v: "--h2" }, { label: "Undetermined", v: "--unknown" },
+  ];
+  const REM_CLASSES = [{ label: "Removed (American Rivers)", v: "--removed" }, { label: "Still standing (NID)", v: "--standing" }];
+  const classesFor = (md) => (md === "age" ? AGE_CLASSES : md === "hazard" ? HAZ_CLASSES : REM_CLASSES);
+
+  let R = null, rN = 0, rpx, rpy, rIn, rStates, hoverPt = null;
+  let D_, S, states, names = null, namesLoading = null;
+  let N = 0, px, py, ageCls, inMap, order = {};
+  let mode = "age", year = 2026, asOf = 2026, selState = "", colors = {};
+  let view = { x0: 0, y0: 0, k: 1 }, playing = null, userPin = null;
+  let grid = null, scope = null;
+  const canvas = $("map"), ctx = canvas.getContext("2d");
+
+  Promise.all([
+    fetch("assets/states.json").then((r) => r.json()),
+    fetch("data/dams.json").then((r) => r.json()),
+    fetch("data/summary.json").then((r) => r.json()),
+    fetch("data/removals.json").then((r) => (r.ok ? r.json() : null)).catch(() => null),
+  ]).then(([st, d, s, rm]) => {
+    states = st; D_ = d; S = s; asOf = s.as_of_year; year = asOf; R = rm && s.removals ? rm : null;
+    prepare(); setupControls(); refreshColors(); setScope(""); sizeCanvas();
+    window.addEventListener("resize", debounce(() => { sizeCanvas(); drawCharts(); }, 150));
+    matchMedia("(prefers-color-scheme: dark)").addEventListener("change", refreshColors);
+    new MutationObserver(refreshColors).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  }).catch((err) => {
+    $("headline").textContent = "The data didn't load.";
+    $("dek").textContent = "Try refreshing the page. (" + err.message + ")";
+  });
+
+  function prepare() {
+    N = D_.lat.length;
+    px = new Float32Array(N); py = new Float32Array(N); ageCls = new Uint8Array(N); inMap = new Uint8Array(N);
+    for (let i = 0; i < N; i++) {
+      const lat = D_.lat[i] / 1000, lon = D_.lon[i] / 1000;
+      if (inConus(lon, lat)) { const [x, y] = project(lon, lat); px[i] = x; py[i] = y; inMap[i] = 1; }
+      const yr = D_.year[i];
+      if (!yr) ageCls[i] = 5;
+      else { const a = asOf - yr; ageCls[i] = a < 25 ? 0 : a < 50 ? 1 : a < 75 ? 2 : a < 100 ? 3 : 4; }
+    }
+    const idx = [...Array(N).keys()];
+    // draw order: background classes first, the classes the story is about on top
+    const ageRank = [1, 2, 3, 4, 5, 0], hazRank = [1, 2, 3, 0];
+    order.age = Int32Array.from(idx.slice().sort((a, b) => ageRank[ageCls[a]] - ageRank[ageCls[b]]));
+    order.hazard = Int32Array.from(idx.slice().sort((a, b) => hazRank[D_.hz[a]] - hazRank[D_.hz[b]]));
+    // hover grid
+    const cell = 6, gw = Math.ceil(MW / cell) + 1, gh = Math.ceil(MH / cell) + 1, buckets = new Map();
+    for (let i = 0; i < N; i++) {
+      if (!inMap[i]) continue;
+      const key = Math.floor(py[i] / cell) * gw + Math.floor(px[i] / cell);
+      (buckets.get(key) || buckets.set(key, []).get(key)).push(i);
+    }
+    grid = { cell, gw, gh, buckets };
+    // removals (American Rivers)
+    if (R) {
+      rN = R.lat.length; rpx = new Float32Array(rN); rpy = new Float32Array(rN); rIn = new Uint8Array(rN);
+      rStates = R.state.map((s) => s.split(";"));
+      for (let i = 0; i < rN; i++) {
+        if (R.lat[i] == null) continue;
+        const lat = R.lat[i] / 1000, lon = R.lon[i] / 1000;
+        if (inConus(lon, lat)) { const [x, y] = project(lon, lat); rpx[i] = x; rpy[i] = y; rIn[i] = 1; }
+      }
+      $("removalSection").hidden = false; $("removalSource").hidden = false;
+      $("remUpdated").textContent = fmtDate(S.removals.updated);
+      $("remStill").textContent = fmt(S.removals.still_in_nid) + " dams American Rivers lists as removed still appear in the National Inventory of Dams.";
+    } else {
+      document.querySelector('.seg button[data-mode="removals"]').hidden = true;
+    }
+    // states for the selector
+    const sel = $("state");
+    const list = Object.keys(S.states).sort((a, b) => S.state_names[a].localeCompare(S.state_names[b]));
+    for (const ab of list) { const o = document.createElement("option"); o.value = ab; o.textContent = S.state_names[ab]; sel.append(o); }
+    $("year").max = asOf; $("year").value = asOf;
+    document.querySelectorAll(".dataDateText").forEach((e) => (e.textContent = fmtDate(S.date)));
+    $("dataDate").textContent = "Data: National Inventory of Dams, updated " + fmtDate(S.date);
+    $("unknownText").textContent = fmt(S.national.unknown_year) + " (" + Math.round(100 * S.national.unknown_year / S.national.dams) + "%)";
+    buildScorecard();
+  }
+
+  // ---------------- scope (all states or one state) ----------------
+  function setScope(ab) {
+    selState = ab;
+    const s = ab ? S.states[ab] : S.national;
+    const stIdx = ab ? D_.states.indexOf(ab) : -1;
+    // cumulative dams completed by each year, for the counter
+    const cum = new Int32Array(asOf - 1600 + 2);
+    for (let i = 0; i < N; i++) {
+      if (stIdx >= 0 && D_.st[i] !== stIdx) continue;
+      const y = D_.year[i]; if (y) cum[Math.max(0, y - 1600)]++;
+    }
+    for (let i = 1; i < cum.length; i++) cum[i] += cum[i - 1];
+    // cumulative removals by year, and the total, for the same scope
+    const rcum = new Int32Array(asOf - 1600 + 2); let rTotal = 0;
+    if (R) {
+      for (let i = 0; i < rN; i++) {
+        if (ab && !rStates[i].includes(ab)) continue;
+        rTotal++; const y = R.year[i]; if (y) rcum[Math.max(0, y - 1600)]++;
+      }
+      for (let i = 1; i < rcum.length; i++) rcum[i] += rcum[i - 1];
+    }
+    scope = { ab, s, stIdx, cum, rcum, rTotal, name: ab ? S.state_names[ab] : "U.S." };
+    $("state").value = ab;
+    document.querySelectorAll("#scorecard tbody tr").forEach((tr) => tr.classList.toggle("sel", tr.dataset.st === ab));
+    updateText(); drawCharts(); renderBars(); renderRemovals(); zoomToScope();
+  }
+
+  function removalRank(ab) {
+    const list = Object.entries(S.removals.by_state).sort((a, b) => b[1] - a[1]);
+    const i = list.findIndex(([k]) => k === ab);
+    return i < 0 ? null : i + 1;
+  }
+
+  function renderRemovals() {
+    if (!R) return;
+    const r = scope.s.removals || S.national.removals, nm = scope.ab ? S.state_names[scope.ab] : null;
+    const rank = scope.ab ? removalRank(scope.ab) : null;
+    const lead = Object.entries(S.removals.by_state).sort((a, b) => b[1] - a[1])[0];
+    tiles($("remStats"), [
+      ["Dams removed", fmt(r.n), nm ? "in " + nm + " since 1912" : "across the U.S. since 1912"],
+      ["Since 2000", fmt(r.since2000), r.dated ? fmtPct(100 * r.since2000 / r.dated) + " of removals with a known year" : ""],
+      ["Busiest year", r.peak_year ? String(r.peak_year) : "—", r.peak_year ? fmt(r.peak_n) + " removals" : ""],
+      nm ? ["Rank among states", rank ? "#" + rank : "—", rank ? "by number of removals" : "no removals recorded"]
+         : ["Leading state", S.state_names[lead[0]] || lead[0], fmt(lead[1]) + " removals"],
+    ]);
+    const hidden = r.n - r.dated;
+    $("remNote").textContent = `${S.removals.chart_from}–${S.removals.chart_to}, the latest year in the database. ` +
+      (r.before_chart ? fmt(r.before_chart) + " earlier removals" : "No earlier removals") +
+      (hidden ? " and " + fmt(hidden) + " with no year are not shown." : " are not shown.");
+    remChart();
+    const listed = r.n - r.no_reason;
+    $("reasonNote").textContent = `Reasons reported for ${fmt(listed)} of ${fmt(r.n)} removals; one removal can list several. Percentages are of removals with a reason.`;
+    bars($("reasonBars"), r.reasons, listed, "--removed");
+  }
+
+  function remChart() {
+    if (!R) return;
+    const r = scope.s.removals || S.national.removals, from = S.removals.chart_from;
+    const labels = r.per_year.map((_, i) => String(from + i));
+    columnChart($("remChart"), $("remCard"), $("remTip"), labels, r.per_year, colors["--removed"], "removals", false);
+  }
+
+  function updateText() {
+    const s = scope.s, nm = scope.ab ? S.state_names[scope.ab] : "U.S.";
+    $("headline").textContent = s.median_age != null
+      ? `The typical ${nm} dam is ${s.median_age} years old.`
+      : `${nm} has ${fmt(s.dams)} dams in the inventory.`;
+    tiles($("stats"), [
+      ["Dams in the inventory", fmt(s.dams), scope.ab ? "in " + S.state_names[scope.ab] : "across the U.S. and territories"],
+      ["Typical age", s.median_age != null ? s.median_age + " years" : "—", s.median_year ? "half were completed by " + s.median_year : ""],
+      ["50 years or older", fmtPct(s.pct_over50_now), s.pct_over50_2035 != null ? fmtPct(s.pct_over50_2035) + " by 2035" : ""],
+      ["High hazard potential", fmt(s.high.n), "failure would probably cost lives"],
+    ]);
+    const h = s.high, condBad = h.condition.Poor + h.condition.Unsatisfactory;
+    tiles($("proStats"), [
+      ["High-hazard dams", fmt(h.n), h.over50_pct != null ? fmtPct(h.over50_pct) + " are 50 or older" : ""],
+      ["Report an Emergency Action Plan", h.n ? fmtPct(100 * h.eap_yes / h.n) : "—", fmt(h.eap_no) + " report none; " + fmt(h.eap_not_required) + " not required"],
+      ["Rated poor or unsatisfactory", fmt(condBad), h.rated ? fmtPct(100 * condBad / h.rated) + " of rated dams; " + fmt(h.not_rated) + " not rated" : "none rated"],
+      ["Inspected in the last 5 years", h.inspection_known ? fmtPct(100 * h.inspected_5y / h.inspection_known) : "—", "of " + fmt(h.inspection_known) + " with a reported date"],
+    ]);
+    const knownShare = s.dams ? Math.round(100 * s.known_year / s.dams) : 0;
+    $("decadeNote").textContent = `${fmt(s.known_year)} dams with a known year (${knownShare}% of ${fmt(s.dams)}).`;
+    $("hhNote").textContent = `${fmt(s.high.n)} high-hazard-potential dams${scope.ab ? " in " + S.state_names[scope.ab] : ""}, by year completed.`;
+    updateCounter();
+  }
+
+  function tiles(box, rows) {
+    box.replaceChildren();
+    for (const [label, value, sub] of rows) {
+      const t = div("stat"); t.append(div("label", label), div("value", value), div("sub", sub)); box.append(t);
+    }
+  }
+
+  function updateCounter() {
+    const c = scope.cum, n = year >= asOf ? scope.s.dams : c[Math.min(c.length - 1, Math.max(0, year - 1600))];
+    $("ctrYear").textContent = year;
+    $("yearLabel").textContent = year;
+    if (mode === "removals" && R) {
+      const removed = year >= asOf ? scope.rTotal : scope.rcum[Math.max(0, year - 1600)];
+      $("ctrCount").textContent = year >= asOf
+        ? fmt(removed) + " removed · " + fmt(n) + " in the inventory"
+        : fmt(n) + " built · " + fmt(removed) + " removed by " + year;
+      return;
+    }
+    $("ctrCount").textContent = year >= asOf
+      ? fmt(n) + " dams" + (scope.s.unknown_year ? ", including " + fmt(scope.s.unknown_year) + " with no year" : "")
+      : fmt(n) + " dams completed by " + year;
+  }
+
+  // ---------------- map ----------------
+  function sizeCanvas() {
+    const dpr = window.devicePixelRatio || 1, w = canvas.clientWidth;
+    canvas.width = Math.round(w * dpr); canvas.height = Math.round(w * MH / MW * dpr);
+    drawMap();
+  }
+
+  let statePaths = null;
+  function drawMapTo(c, W, H, v, opt = {}) {
+    // c: 2d context already sized; W,H: pixel size; v: view
+    const s = W / MW * v.k;
+    c.save();
+    c.fillStyle = colors.surface; c.fillRect(0, 0, W, H);
+    c.setTransform(s, 0, 0, s, -v.x0 * s, -v.y0 * s);
+    if (!statePaths) statePaths = states.states.map((st) => new Path2D(st.d));
+    c.fillStyle = colors.land; c.strokeStyle = colors.stateLine; c.lineWidth = 0.8 / v.k * (W / MW > 1.5 ? 1.2 : 1); c.lineJoin = "round";
+    for (const p of statePaths) { c.fill(p); c.stroke(p); }
+
+    const yr = opt.year ?? year, md = opt.mode ?? mode, stIdx = opt.stIdx ?? scope.stIdx;
+    const cls = classesFor(md);
+    const fills = cls.map((k) => colors[k.v]);
+    const classOf = (i) => (md === "age" ? ageCls[i] : md === "hazard" ? D_.hz[i] : 1);
+    const pxScale = W / MW;            // canvas px per logical unit at k = 1
+    const dpr = opt.dpr || 1, cssScale = pxScale / dpr;
+    const sizeF = Math.min(1, Math.max(0.5, cssScale)); // smaller dots on small maps (phones)
+    const cssR = Math.min(4.5, Math.max(0.85, 0.85 * Math.pow(v.k, 0.5))) * sizeF * (opt.dotScale || 1);
+    const devR = cssR * dpr, u = dpr / (pxScale * v.k); // u: logical units per CSS pixel
+    const baseR = devR / (pxScale * v.k);
+    const round = cssR > 1.5;          // squares are faster and look the same when tiny
+    const vx1 = v.x0 - 5, vy1 = v.y0 - 5, vx2 = v.x0 + MW / v.k + 5, vy2 = v.y0 + MH / v.k + 5;
+    const ord = order[md] || order.age;
+    const showAll = yr >= asOf;
+    const passes = stIdx >= 0 ? [false, true] : [true];
+    for (const selPass of passes) {
+      c.globalAlpha = stIdx >= 0 && !selPass ? 0.13 : 1;
+      let lastK = -1;
+      for (let j = 0; j < ord.length; j++) {
+        const i = ord[j];
+        if (!inMap[i]) continue;
+        const x = px[i], y0 = py[i];
+        if (x < vx1 || x > vx2 || y0 < vy1 || y0 > vy2) continue;
+        if (stIdx >= 0 && (D_.st[i] === stIdx) !== selPass) continue;
+        const y = D_.year[i];
+        if (!showAll && (!y || y > yr)) continue;
+        const k = classOf(i);
+        const r = baseR * (md === "hazard" && k === 2 ? 1.3 : 1);
+        if (k !== lastK) { c.fillStyle = fills[k]; lastK = k; }
+        if (round) { c.beginPath(); c.arc(x, y0, r, 0, 2 * Math.PI); c.fill(); }
+        else c.fillRect(x - r, y0 - r, 2 * r, 2 * r);
+      }
+    }
+    c.globalAlpha = 1;
+    if (stIdx >= 0) {
+      const nm = S.state_names[D_.states[stIdx]], st = states.states.find((s) => s.name === nm);
+      if (st) { c.strokeStyle = colors.ink; c.lineWidth = 1.6 * u; c.stroke(new Path2D(st.d)); }
+    }
+    // freshly completed dams pop during playback
+    if (!showAll && opt.flash !== false && md !== "removals") {
+      const r = baseR * 2.4;
+      c.lineWidth = 1.2 * u; c.strokeStyle = colors.surface;
+      for (let i = 0; i < N; i++) {
+        const y = D_.year[i];
+        if (!inMap[i] || !y || y > yr || y <= yr - 2) continue;
+        if (stIdx >= 0 && D_.st[i] !== stIdx) continue;
+        const k = classOf(i);
+        c.beginPath(); c.arc(px[i], py[i], r, 0, 2 * Math.PI); c.fillStyle = fills[k]; c.fill(); c.stroke();
+      }
+    }
+    // removed dams sit on top of the standing ones, larger and ringed
+    if (md === "removals" && R) {
+      const ab = stIdx >= 0 ? D_.states[stIdx] : null;
+      const rr = Math.max(2.2, cssR * 2.4) * u;
+      c.lineWidth = 1.1 * u; c.strokeStyle = colors.surface; c.fillStyle = colors["--removed"];
+      for (const selPass of ab ? [false, true] : [true]) {
+        c.globalAlpha = ab && !selPass ? 0.18 : 1;
+        for (let i = 0; i < rN; i++) {
+          if (!rIn[i]) continue;
+          const x = rpx[i], y0 = rpy[i];
+          if (x < vx1 || x > vx2 || y0 < vy1 || y0 > vy2) continue;
+          if (ab && rStates[i].includes(ab) !== selPass) continue;
+          const y = R.year[i];
+          if (!showAll && (!y || y > yr)) continue;
+          const fresh = !showAll && opt.flash !== false && y > yr - 2;
+          c.beginPath(); c.arc(x, y0, rr * (fresh ? 1.7 : 1), 0, 2 * Math.PI); c.fill(); c.stroke();
+        }
+      }
+      c.globalAlpha = 1;
+    }
+    if (opt.hlPt) {
+      c.beginPath(); c.arc(opt.hlPt[0], opt.hlPt[1], 8 * u, 0, 2 * Math.PI);
+      c.lineWidth = 2 * u; c.strokeStyle = colors.ink; c.stroke();
+    }
+    if (opt.pin) {
+      c.beginPath(); c.arc(opt.pin[0], opt.pin[1], 6 * u, 0, 2 * Math.PI);
+      c.fillStyle = colors.ink; c.fill(); c.lineWidth = 2.5 * u; c.strokeStyle = colors.surface; c.stroke();
+    }
+    if (opt.hl != null && inMap[opt.hl]) {
+      c.beginPath(); c.arc(px[opt.hl], py[opt.hl], 7 * u, 0, 2 * Math.PI);
+      c.lineWidth = 2 * u; c.strokeStyle = colors.ink; c.stroke();
+    }
+    c.restore();
+  }
+
+  let hoverIdx = null;
+  function drawMap() {
+    if (!D_ || !scope) return;
+    drawMapTo(ctx, canvas.width, canvas.height, view, { pin: userPin, hl: hoverIdx, hlPt: hoverPt, dpr: window.devicePixelRatio || 1 });
+    const ab = scope && scope.ab, msg = $("mapMsg");
+    const offMap = ab && ["AK", "HI", "PR", "GU"].includes(ab);
+    msg.classList.toggle("on", !!offMap);
+    if (offMap) msg.textContent = `The map shows the lower 48 states. ${S.state_names[ab]}'s ${fmt(scope.s.dams)} dams are included in the figures below.`;
+  }
+
+  function zoomToScope() {
+    if (!scope.ab) { animateView({ x0: 0, y0: 0, k: 1 }); return; }
+    const xs = [], ys = [];
+    for (let i = 0; i < N; i++) if (inMap[i] && D_.st[i] === scope.stIdx) { xs.push(px[i]); ys.push(py[i]); }
+    if (!xs.length) { animateView({ x0: 0, y0: 0, k: 1 }); return; }
+    xs.sort((a, b) => a - b); ys.sort((a, b) => a - b);
+    const q = (a, p) => a[Math.min(a.length - 1, Math.max(0, Math.round(p * (a.length - 1))))];
+    fitBox(q(xs, 0.01), q(ys, 0.01), q(xs, 0.99), q(ys, 0.99), 0.25);
+  }
+
+  function fitBox(x1, y1, x2, y2, pad) {
+    const w = Math.max(8, x2 - x1), h = Math.max(6, y2 - y1);
+    const k = Math.max(1, Math.min(40, Math.min(MW / (w * (1 + pad)), MH / (h * (1 + pad)))));
+    const cx = (x1 + x2) / 2, cy = (y1 + y2) / 2;
+    animateView(clampView({ x0: cx - MW / (2 * k), y0: cy - MH / (2 * k), k }));
+  }
+
+  function clampView(v) {
+    const vw = MW / v.k, vh = MH / v.k, m = 40;
+    v.x0 = Math.min(MW - vw + m, Math.max(-m, v.x0));
+    v.y0 = Math.min(MH - vh + m, Math.max(-m, v.y0));
+    if (v.k <= 1) { v.k = 1; v.x0 = 0; v.y0 = 0; }
+    return v;
+  }
+
+  let anim = null;
+  function animateView(target) {
+    cancelAnimationFrame(anim);
+    const from = { ...view }, t0 = performance.now(), dur = 380;
+    const step = (t) => {
+      const u = Math.min(1, (t - t0) / dur), e = u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+      const lk = Math.log(from.k) + (Math.log(target.k) - Math.log(from.k)) * e;
+      view = { k: Math.exp(lk), x0: from.x0 + (target.x0 - from.x0) * e, y0: from.y0 + (target.y0 - from.y0) * e };
+      drawMap();
+      if (u < 1) anim = requestAnimationFrame(step);
+    };
+    anim = requestAnimationFrame(step);
+  }
+
+  function toLogical(ev) {
+    const r = canvas.getBoundingClientRect(), s = r.width / MW;
+    return [view.x0 + (ev.clientX - r.left) / (s * view.k), view.y0 + (ev.clientY - r.top) / (s * view.k)];
+  }
+
+  function zoomAt(lx, ly, factor) {
+    const k = Math.max(1, Math.min(60, view.k * factor));
+    const f = view.k / k;
+    view = clampView({ k, x0: lx - (lx - view.x0) * f, y0: ly - (ly - view.y0) * f });
+    drawMap();
+  }
+
+  function nearest(ev) {
+    const [lx, ly] = toLogical(ev), r = canvas.getBoundingClientRect();
+    const maxD = 12 / (r.width / MW * view.k);
+    const { cell, gw, buckets } = grid;
+    const cx = Math.floor(lx / cell), cy = Math.floor(ly / cell), span = Math.ceil(maxD / cell);
+    let best = -1, bestD = maxD * maxD;
+    for (let gy = cy - span; gy <= cy + span; gy++) for (let gx = cx - span; gx <= cx + span; gx++) {
+      const b = buckets.get(gy * gw + gx); if (!b) continue;
+      for (const i of b) {
+        const y = D_.year[i];
+        if (year < asOf && (!y || y > year)) continue;
+        if (scope.stIdx >= 0 && D_.st[i] !== scope.stIdx) continue;
+        const dx = px[i] - lx, dy = py[i] - ly, dd = dx * dx + dy * dy;
+        if (dd < bestD) { bestD = dd; best = i; }
+      }
+    }
+    return best;
+  }
+
+  function nearestRemoval(ev) {
+    if (!R) return -1;
+    const [lx, ly] = toLogical(ev), r = canvas.getBoundingClientRect();
+    const maxD = 14 / (r.width / MW * view.k);
+    let best = -1, bestD = maxD * maxD;
+    for (let i = 0; i < rN; i++) {
+      if (!rIn[i]) continue;
+      const y = R.year[i];
+      if (year < asOf && (!y || y > year)) continue;
+      if (scope.ab && !rStates[i].includes(scope.ab)) continue;
+      const dx = rpx[i] - lx, dy = rpy[i] - ly, dd = dx * dx + dy * dy;
+      if (dd < bestD) { bestD = dd; best = i; }
+    }
+    return best;
+  }
+
+  function showRemovalTip(i, ev) {
+    const tip = $("mapTip"); tip.replaceChildren();
+    const kv = (k, v) => { const d = div("kv"); const b = document.createElement("b"); b.textContent = k + " "; d.append(b, document.createTextNode(v)); return d; };
+    tip.append(div("big", R.name[i]));
+    const where = [R.place[i], R.state[i].replace(";", "/")].filter(Boolean).join(", ");
+    tip.append(div("name", where + (R.river[i] ? " · " + R.river[i] : "")));
+    tip.append(kv("Removed", R.year[i] ? String(R.year[i]) : "year not reported"));
+    if (R.built[i]) tip.append(kv("Built", R.built[i] + (R.year[i] ? " (stood " + (R.year[i] - R.built[i]) + " years)" : "")));
+    if (R.h[i] >= 0) tip.append(kv("Height", R.h[i] + " ft"));
+    if (R.use[i]) tip.append(kv("Original use", R.use[i]));
+    if (R.reasons[i]) tip.append(kv("Why removed", R.reasons[i]));
+    if (R.miles[i] != null) tip.append(kv("River miles reopened upstream", R.miles[i] + " (as reported)"));
+    tip.append(div("meta", "Source: American Rivers Dam Removal Database"));
+    place_(tip, $("mapCard"), ev);
+  }
+
+  function loadNames() {
+    if (names) return Promise.resolve(names);
+    if (!namesLoading) namesLoading = fetch("data/names.json").then((r) => r.json()).then((n) => (names = n));
+    return namesLoading;
+  }
+
+  const HAZ_TEXT = ["Low: little loss beyond the owner's property", "Significant: economic or environmental damage likely", "High: failure would probably cost lives", "Not determined"];
+  function showDamTip(i, ev) {
+    const tip = $("mapTip"); tip.replaceChildren();
+    const nm = names ? names.name[i] : "Loading name…";
+    const place = names ? [names.place[i], D_.states[D_.st[i]]].filter(Boolean).join(", ") : D_.states[D_.st[i]];
+    tip.append(div("big", nm), div("name", place + (names && names.river[i] ? " · " + names.river[i] : "")));
+    const yr = D_.year[i];
+    const kv = (k, v) => { const d = div("kv"); const b = document.createElement("b"); b.textContent = k + " "; d.append(b, document.createTextNode(v)); return d; };
+    tip.append(kv("Completed", yr ? yr + " (" + (asOf - yr) + " years ago)" : "year not reported"));
+    const size = [D_.h[i] >= 0 ? D_.h[i] + " ft high" : null, D_.s[i] >= 0 ? fmt(D_.s[i]) + " acre-ft storage" : null].filter(Boolean).join(" · ");
+    if (size) tip.append(kv("Size", size));
+    tip.append(kv("Hazard potential", HAZ_TEXT[D_.hz[i]]));
+    tip.append(kv("Purpose", D_.purposes[D_.pu[i]] || "Not listed"));
+    tip.append(kv("Owner", (D_.owners[D_.ow[i]] || "Not listed") + " · " + (D_.types[D_.ty[i]] || "type not listed")));
+    if (names && names.nid[i]) tip.append(div("meta", "NID ID " + names.nid[i]));
+    place_(tip, $("mapCard"), ev);
+  }
+
+  function place_(tip, card, ev) {
+    tip.style.display = "block";
+    const box = card.getBoundingClientRect();
+    let left = ev.clientX - box.left + 14, top = ev.clientY - box.top + 14;
+    const tw = tip.offsetWidth, th = tip.offsetHeight;
+    if (left + tw > box.width - 8) left = ev.clientX - box.left - tw - 14;
+    if (top + th > box.height - 8) top = ev.clientY - box.top - th - 14;
+    tip.style.left = Math.max(8, left) + "px"; tip.style.top = Math.max(8, top) + "px";
+  }
+
+  function setupMapEvents() {
+    let drag = null;
+    canvas.addEventListener("pointerdown", (ev) => {
+      drag = { x: ev.clientX, y: ev.clientY, v: { ...view }, moved: false };
+      canvas.setPointerCapture(ev.pointerId);
+    });
+    canvas.addEventListener("pointermove", (ev) => {
+      if (drag) {
+        const dx = ev.clientX - drag.x, dy = ev.clientY - drag.y;
+        if (Math.abs(dx) + Math.abs(dy) > 3) drag.moved = true;
+        if (drag.moved) {
+          canvas.classList.add("dragging"); $("mapTip").style.display = "none";
+          const s = canvas.getBoundingClientRect().width / MW * view.k;
+          view = clampView({ k: drag.v.k, x0: drag.v.x0 - dx / s, y0: drag.v.y0 - dy / s });
+          drawMap(); return;
+        }
+      }
+      if (mode === "removals" && R) {
+        const ri = nearestRemoval(ev);
+        if (ri >= 0) {
+          hoverIdx = null;
+          if (!hoverPt || hoverPt[0] !== rpx[ri] || hoverPt[1] !== rpy[ri]) { hoverPt = [rpx[ri], rpy[ri]]; drawMap(); }
+          showRemovalTip(ri, ev); return;
+        }
+      }
+      if (hoverPt) { hoverPt = null; drawMap(); }
+      const i = nearest(ev);
+      if (i < 0) { $("mapTip").style.display = "none"; if (hoverIdx != null) { hoverIdx = null; drawMap(); } return; }
+      if (i !== hoverIdx) { hoverIdx = i; drawMap(); }
+      if (!names) loadNames().then(() => { if (hoverIdx === i) showDamTip(i, ev); });
+      showDamTip(i, ev);
+    });
+    const end = () => { drag = null; canvas.classList.remove("dragging"); };
+    canvas.addEventListener("pointerup", end);
+    canvas.addEventListener("pointercancel", end);
+    canvas.addEventListener("pointerleave", () => { $("mapTip").style.display = "none"; if (hoverIdx != null || hoverPt) { hoverIdx = null; hoverPt = null; drawMap(); } });
+    canvas.addEventListener("wheel", (ev) => {
+      if (!(ev.ctrlKey || ev.metaKey)) return; // plain scrolling keeps scrolling the page
+      ev.preventDefault();
+      const [lx, ly] = toLogical(ev);
+      zoomAt(lx, ly, Math.exp(-ev.deltaY * 0.0015));
+    }, { passive: false });
+    $("zin").addEventListener("click", () => zoomAt(view.x0 + MW / (2 * view.k), view.y0 + MH / (2 * view.k), 1.6));
+    $("zout").addEventListener("click", () => zoomAt(view.x0 + MW / (2 * view.k), view.y0 + MH / (2 * view.k), 1 / 1.6));
+    $("zreset").addEventListener("click", () => { userPin = null; $("near").classList.remove("on"); setScope(""); });
+  }
+
+  function buildLegend() {
+    const lg = $("legend"); lg.replaceChildren();
+    for (const c of classesFor(mode)) {
+      const s = document.createElement("span"), dot = document.createElement("i");
+      dot.style.background = colors[c.v];
+      if (c.v === "--removed") { dot.style.width = dot.style.height = "12px"; dot.style.boxShadow = "0 0 0 1.5px " + colors.surface; }
+      s.append(dot, document.createTextNode(c.label)); lg.append(s);
+    }
+    const hint = document.createElement("span"); hint.className = "hint";
+    hint.textContent = mode === "age" ? "Age in " + asOf + ", from year completed"
+      : mode === "hazard" ? "Consequences if the dam failed, not its condition"
+      : "Removed dams shown at their former sites";
+    lg.append(hint);
+  }
+
+  // ---------------- charts ----------------
+  function drawCharts() {
+    if (!scope) return;
+    columnChart($("decadeChart"), $("decadeCard"), $("decadeTip"), S.decade_labels, scope.s.decades, colors["--series"], "dams", true);
+    columnChart($("hhChart"), $("hhCard"), $("hhTip"), S.decade_labels, scope.s.hh_decades, colors["--h1"], "high-hazard dams", false);
+    agingChart();
+    decadeTable();
+    remChart();
+  }
+
+  function decadeStart(label) { return label.startsWith("Before") ? 0 : parseInt(label, 10); }
+  // dams in decade i completed by year yr (the bar fills in as playback moves through it)
+  function decadeSoFar(i, yr) {
+    const start = decadeStart(S.decade_labels[i]), full = scope.s.decades[i];
+    if (yr >= asOf || yr >= start + 9) return full;
+    if (yr < start) return 0;
+    const c = scope.cum, lo = Math.max(0, start - 1600 - 1);
+    return Math.min(full, c[yr - 1600] - (start === 0 ? 0 : c[lo]));
+  }
+
+  function columnChart(svg, card, tip, labels, values, color, unit, followYear) {
+    const W = Math.max(300, svg.parentNode.clientWidth - 32), H = 230, m = { t: 22, r: 6, b: 28, l: 44 };
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.setAttribute("width", W); svg.replaceChildren();
+    const max = Math.max(1, ...values), top = niceTop(max), iw = W - m.l - m.r, ih = H - m.t - m.b;
+    const n = values.length, slot = iw / n, bw = Math.min(24, Math.max(2, slot - 3));
+    const y = (v) => m.t + ih - (v / top) * ih;
+    const step = top / 4;
+    for (let v = 0; v <= top + 1e-9; v += step) {
+      el("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), stroke: v === 0 ? colors["--axis"] : colors["--grid"], "stroke-width": 1 }, svg);
+      const t = el("text", { x: m.l - 6, y: y(v) + 4, "text-anchor": "end", "font-size": 11, fill: colors["--muted"] }, svg);
+      t.textContent = v >= 1000 ? Math.round(v / 1000) + "K" : Math.round(v);
+    }
+    const total = values.reduce((a, b) => a + b, 0);
+    let maxI = values.indexOf(max);
+    const colPath = (x, h) => {
+      const r = Math.min(4, bw / 2, h);
+      return `M${x},${m.t + ih}V${m.t + ih - h + r}Q${x},${m.t + ih - h} ${x + r},${m.t + ih - h}H${x + bw - r}Q${x + bw},${m.t + ih - h} ${x + bw},${m.t + ih - h + r}V${m.t + ih}Z`;
+    };
+    values.forEach((v, i) => {
+      const x = m.l + i * slot + (slot - bw) / 2, h = Math.max(0, m.t + ih - y(v));
+      const sofar = followYear && year < asOf ? decadeSoFar(i, year) : v;
+      if (h > 0) {
+        if (sofar < v) el("path", { d: colPath(x, h), fill: color, opacity: 0.18 }, svg);
+        const hs = Math.max(0, m.t + ih - y(sofar));
+        if (hs > 0) el("path", { d: colPath(x, hs), fill: color }, svg);
+      }
+      const isYear = /^\d{4}$/.test(labels[i]), every = Math.ceil(n / 7);
+      const showLabel = isYear ? (+labels[i] % 10 === 0) : (i % every === 0 || (i === n - 1 && (n - 1) % every >= every / 2));
+      if (showLabel) {
+        const t = el("text", { x: m.l + i * slot + slot / 2, y: H - 8, "text-anchor": "middle", "font-size": 11, fill: colors["--muted"] }, svg);
+        t.textContent = labels[i].replace("Before 1850", "<1850");
+      }
+    });
+    if (max > 0) {
+      const t = el("text", { x: m.l + maxI * slot + slot / 2, y: y(max) - 6, "text-anchor": "middle", "font-size": 11, fill: colors["--ink-2"] }, svg);
+      t.textContent = labels[maxI] + ": " + fmt(max);
+    }
+    const hit = el("rect", { x: m.l, y: m.t, width: iw, height: ih, fill: "transparent" }, svg);
+    hit.addEventListener("pointermove", (ev) => {
+      const r = svg.getBoundingClientRect(), i = Math.min(n - 1, Math.max(0, Math.floor(((ev.clientX - r.left) * (W / r.width) - m.l) / slot)));
+      tip.replaceChildren(div("big", fmt(values[i]) + " " + unit), div("name", labels[i] + (total ? " · " + (100 * values[i] / total).toFixed(1) + "% of total" : "")));
+      place_(tip, card, ev);
+    });
+    hit.addEventListener("pointerleave", () => (tip.style.display = "none"));
+  }
+
+  function niceTop(v) {
+    const p = Math.pow(10, Math.floor(Math.log10(v))), f = v / p;
+    const nice = f <= 1 ? 1 : f <= 2 ? 2 : f <= 4 ? 4 : f <= 5 ? 5 : f <= 8 ? 8 : 10;
+    return nice * p;
+  }
+
+  function agingChart() {
+    const svg = $("agingChart"), card = $("agingCard"), tip = $("agingTip");
+    const W = Math.max(300, svg.parentNode.clientWidth - 32), H = 230, m = { t: 16, r: 14, b: 28, l: 40 };
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.setAttribute("width", W); svg.replaceChildren();
+    const [y0, y1] = S.aging_years, vals = scope.s.aging, iw = W - m.l - m.r, ih = H - m.t - m.b;
+    if (!vals || vals.every((v) => v == null)) return;
+    const x = (yr) => m.l + ((yr - y0) / (y1 - y0)) * iw, y = (v) => m.t + ih - (v / 100) * ih;
+    for (let v = 0; v <= 100; v += 25) {
+      el("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), stroke: v === 0 ? colors["--axis"] : colors["--grid"], "stroke-width": 1 }, svg);
+      el("text", { x: m.l - 6, y: y(v) + 4, "text-anchor": "end", "font-size": 11, fill: colors["--muted"] }, svg).textContent = v + "%";
+    }
+    for (let yr = y0; yr <= y1; yr += 10) el("text", { x: x(yr), y: H - 8, "text-anchor": "middle", "font-size": 11, fill: colors["--muted"] }, svg).textContent = yr;
+    const pts = vals.map((v, i) => [x(y0 + i), y(v ?? 0)]);
+    const cut = asOf - y0;
+    const line = (a, b, op) => el("path", { d: "M" + pts.slice(a, b + 1).map((p) => p.map((n) => n.toFixed(1)).join(",")).join("L"), fill: "none", stroke: colors["--series"], "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round", opacity: op }, svg);
+    line(0, cut, 1); line(cut, vals.length - 1, 0.4);
+    const mark = (yr, label, anchor) => {
+      const i = yr - y0; if (i < 0 || i >= vals.length) return;
+      el("circle", { cx: pts[i][0], cy: pts[i][1], r: 4.5, fill: colors["--series"], stroke: colors["--surface"], "stroke-width": 2 }, svg);
+      el("text", { x: pts[i][0] + (anchor === "end" ? -8 : 8), y: pts[i][1] + (anchor === "end" ? -8 : 16), "text-anchor": anchor, "font-size": 12, fill: colors["--ink"], "font-weight": 600 }, svg).textContent = label;
+    };
+    mark(asOf, Math.round(vals[cut]) + "% in " + asOf, "end");
+    if (2035 <= y1) mark(2035, Math.round(vals[2035 - y0]) + "% by 2035", "start");
+    const cross = el("line", { y1: m.t, y2: m.t + ih, stroke: colors["--axis"], "stroke-width": 1, visibility: "hidden" }, svg);
+    const hit = el("rect", { x: m.l, y: m.t, width: iw, height: ih, fill: "transparent" }, svg);
+    hit.addEventListener("pointermove", (ev) => {
+      const r = svg.getBoundingClientRect(), lx = (ev.clientX - r.left) * (W / r.width);
+      const i = Math.min(vals.length - 1, Math.max(0, Math.round(((lx - m.l) / iw) * (y1 - y0))));
+      cross.setAttribute("x1", pts[i][0]); cross.setAttribute("x2", pts[i][0]); cross.setAttribute("visibility", "visible");
+      tip.replaceChildren(div("big", (vals[i] ?? 0).toFixed(1) + "%"), div("name", "of dams 50+ years old in " + (y0 + i) + (y0 + i > asOf ? " (if none are added)" : "")));
+      place_(tip, card, ev);
+    });
+    hit.addEventListener("pointerleave", () => { tip.style.display = "none"; cross.setAttribute("visibility", "hidden"); });
+  }
+
+  function decadeTable() {
+    const t = $("decadeTable"); t.replaceChildren();
+    const hr = t.createTHead().insertRow();
+    ["Decade", "Dams", "High-hazard"].forEach((h, i) => { const th = document.createElement("th"); th.textContent = h; if (i) th.className = "num"; hr.append(th); });
+    const b = t.createTBody();
+    S.decade_labels.forEach((lab, i) => {
+      const r = b.insertRow();
+      [lab, fmt(scope.s.decades[i]), fmt(scope.s.hh_decades[i])].forEach((v, j) => { const td = r.insertCell(); td.textContent = v; if (j) td.className = "num"; });
+    });
+  }
+
+  function renderBars() {
+    const s = scope.s;
+    bars($("purposeBars"), s.purposes, s.dams);
+    bars($("ownerBars"), s.owners, s.dams);
+    const c = s.high.condition, rated = s.high.rated;
+    bars($("conditionBars"), [["Satisfactory", c.Satisfactory], ["Fair", c.Fair], ["Poor", c.Poor], ["Unsatisfactory", c.Unsatisfactory], ["Not rated or not available", s.high.not_rated]], s.high.n, "--h1");
+  }
+
+  function bars(box, rows, total, colorVar) {
+    box.replaceChildren();
+    const max = Math.max(1, ...rows.map((r) => r[1]));
+    for (const [label, v] of rows) {
+      const row = div("bar-row"), track = div("track"), fill = div("fill");
+      fill.style.width = (100 * v / max) + "%";
+      if (colorVar) fill.style.background = `var(${colorVar})`;
+      track.append(fill);
+      const val = div("val", fmt(v) + " "), pct = document.createElement("span");
+      pct.textContent = total ? Math.round(100 * v / total) + "%" : ""; val.append(pct);
+      row.append(div("lab", label), track, val); box.append(row);
+    }
+  }
+
+  // ---------------- scorecard ----------------
+  const COLS = [
+    { key: "name", label: "State", get: (ab) => S.state_names[ab], text: true },
+    { key: "dams", label: "Dams", get: (ab) => S.states[ab].dams },
+    { key: "age", label: "Median age (yrs)", get: (ab) => S.states[ab].median_age },
+    { key: "o50", label: "50+ years old", get: (ab) => S.states[ab].pct_over50_now, pct: true },
+    { key: "hh", label: "High-hazard", get: (ab) => S.states[ab].high.n },
+    { key: "eap", label: "High-hazard with EAP", get: (ab) => { const h = S.states[ab].high; return h.n ? 100 * h.eap_yes / h.n : null; }, pct: true },
+    { key: "bad", label: "High-hazard poor or unsatisfactory", get: (ab) => { const c = S.states[ab].high.condition; return c.Poor + c.Unsatisfactory; } },
+    { key: "insp", label: "High-hazard inspected in 5 yrs", get: (ab) => { const h = S.states[ab].high; return h.inspection_known ? 100 * h.inspected_5y / h.inspection_known : null; }, pct: true },
+    { key: "rem", label: "Dams removed (American Rivers)", get: (ab) => (S.states[ab].removals ? S.states[ab].removals.n : null) },
+  ];
+  let sortKey = "dams", sortDir = -1;
+  function buildScorecard() {
+    const t = $("scorecard"); t.replaceChildren();
+    const hr = t.createTHead().insertRow();
+    COLS.forEach((c) => {
+      const th = document.createElement("th"); th.textContent = c.label; th.className = "sortable" + (c.text ? "" : " num");
+      th.tabIndex = 0; th.setAttribute("aria-sort", c.key === sortKey ? (sortDir > 0 ? "ascending" : "descending") : "none");
+      const go = () => { sortDir = sortKey === c.key ? -sortDir : (c.text ? 1 : -1); sortKey = c.key; buildScorecard(); };
+      th.addEventListener("click", go); th.addEventListener("keydown", (e) => { if (e.key === "Enter") go(); });
+      hr.append(th);
+    });
+    const col = COLS.find((c) => c.key === sortKey);
+    const rows = Object.keys(S.states).sort((a, b) => {
+      const va = col.get(a), vb = col.get(b);
+      if (col.text) return sortDir * String(va).localeCompare(String(vb));
+      return sortDir * ((va ?? -1) - (vb ?? -1));
+    });
+    const b = t.createTBody();
+    for (const ab of rows) {
+      const r = b.insertRow(); r.dataset.st = ab; if (ab === selState) r.classList.add("sel");
+      COLS.forEach((c) => { const td = r.insertCell(); const v = c.get(ab); td.textContent = c.text ? v : c.pct ? fmtPct(v) : fmt(v); if (!c.text) td.className = "num"; });
+      r.addEventListener("click", () => { setScope(ab); $("mapCard").scrollIntoView({ behavior: "smooth", block: "start" }); });
+    }
+  }
+
+  function downloadCsv() {
+    const head = ["state", "dams", "median_age_years", "pct_50_plus", "high_hazard", "high_hazard_pct_with_eap", "high_hazard_poor_or_unsatisfactory", "high_hazard_pct_inspected_5yr", "dams_removed_american_rivers"];
+    const lines = [head.join(",")];
+    for (const ab of Object.keys(S.states).sort()) {
+      lines.push(COLS.map((c) => { const v = c.get(ab); return c.text ? '"' + v + '"' : v == null ? "" : (c.pct ? v.toFixed(1) : v); }).join(","));
+    }
+    lines.push("", `"Source: National Inventory of Dams (USACE), data updated ${S.date}; analysis by Shantanu Bhide, shantanubhide.com/dams"`);
+    if (S.removals) lines.push(`"Removals: American Rivers Dam Removal Database (${S.removals.updated}), https://doi.org/10.6084/m9.figshare.5234068, CC BY 4.0"`);
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([lines.join("\n")], { type: "text/csv" }));
+    a.download = "dam-state-scorecard-" + S.date + ".csv"; document.body.append(a); a.click(); a.remove();
+  }
+
+  // ---------------- near me ----------------
+  function nearMe() {
+    const box = $("near");
+    if (!navigator.geolocation) { alertNear("Your browser can't share a location."); return; }
+    $("nearme").textContent = "Finding you…";
+    navigator.geolocation.getCurrentPosition((pos) => {
+      $("nearme").textContent = "Dams near me";
+      const { latitude: la, longitude: lo } = pos.coords;
+      const dist = [];
+      const cosLa = Math.cos(la * D);
+      for (let i = 0; i < N; i++) {
+        const dy = (D_.lat[i] / 1000 - la) * 69.05, dx = (D_.lon[i] / 1000 - lo) * 69.17 * cosLa;
+        dist.push([dx * dx + dy * dy, i]);
+      }
+      dist.sort((a, b) => a[0] - b[0]);
+      const top = dist.slice(0, 5);
+      loadNames().then(() => {
+        const t = $("nearTable"); t.replaceChildren();
+        const hr = t.createTHead().insertRow();
+        ["Dam", "Distance", "Completed", "Hazard potential", "Purpose"].forEach((h, j) => { const th = document.createElement("th"); th.textContent = h; if (j === 1 || j === 2) th.className = "num"; hr.append(th); });
+        const b = t.createTBody();
+        for (const [d2, i] of top) {
+          const r = b.insertRow();
+          [names.name[i] + (names.river[i] ? " (" + names.river[i] + ")" : ""), Math.sqrt(d2).toFixed(1) + " mi", D_.year[i] || "—", D_.hazards[D_.hz[i]], D_.purposes[D_.pu[i]] || "Not listed"]
+            .forEach((v, j) => { const td = r.insertCell(); td.textContent = v; if (j === 1 || j === 2) td.className = "num"; });
+        }
+        box.classList.add("on");
+      });
+      if (inConus(lo, la)) {
+        userPin = project(lo, la);
+        const far = top[top.length - 1], fi = far[1];
+        const r = Math.max(14, Math.hypot(px[fi] - userPin[0], py[fi] - userPin[1]) * 1.4);
+        if (scope.ab) setScope("");
+        fitBox(userPin[0] - r, userPin[1] - r, userPin[0] + r, userPin[1] + r, 0.1);
+      }
+    }, () => { $("nearme").textContent = "Dams near me"; alertNear("Location was not shared, so we can't find nearby dams. You can still pick a state from the list."); }, { timeout: 10000 });
+  }
+  function alertNear(msg) {
+    const box = $("near"); box.classList.add("on");
+    const t = $("nearTable"); t.replaceChildren(); const r = t.insertRow(); r.insertCell().textContent = msg;
+  }
+
+  // ---------------- playback ----------------
+  function setYear(y) { year = y; $("year").value = y; updateCounter(); drawMap(); columnChart($("decadeChart"), $("decadeCard"), $("decadeTip"), S.decade_labels, scope.s.decades, colors["--series"], "dams", true); }
+  function play() {
+    if (year >= asOf) setYear(1800);
+    $("play").textContent = "❚❚ Pause";
+    playing = setInterval(() => {
+      if (year >= asOf) { stop(); return; }
+      setYear(Math.min(asOf, year + (year < 1880 ? 4 : 1)));
+    }, 70);
+  }
+  function stop() { clearInterval(playing); playing = null; $("play").textContent = "▶ Play"; }
+
+  function setupControls() {
+    setupMapEvents();
+    $("play").addEventListener("click", () => (playing ? stop() : play()));
+    $("year").addEventListener("input", (e) => { stop(); setYear(+e.target.value); });
+    document.querySelectorAll(".seg button").forEach((b) => b.addEventListener("click", () => {
+      mode = b.dataset.mode;
+      document.querySelectorAll(".seg button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+      hoverPt = null; buildLegend(); updateCounter(); drawMap();
+    }));
+    $("state").addEventListener("change", (e) => { userPin = null; $("near").classList.remove("on"); setScope(e.target.value); });
+    $("nearme").addEventListener("click", nearMe);
+    $("save").addEventListener("click", saveImage);
+    $("download").addEventListener("click", downloadCsv);
+  }
+
+  function refreshColors() {
+    const vars = ["--surface", "--page", "--ink", "--ink-2", "--muted", "--grid", "--axis", "--land", "--state-line", "--unknown", "--series",
+      "--a0", "--a1", "--a2", "--a3", "--a4", "--h0", "--h1", "--h2", "--removed", "--standing"];
+    colors = {}; for (const v of vars) colors[v] = cssVar(v);
+    colors.surface = colors["--surface"]; colors.land = colors["--land"]; colors.stateLine = colors["--state-line"]; colors.ink = colors["--ink"];
+    buildLegend(); drawMap(); drawCharts();
+  }
+
+  function debounce(fn, ms) { let t; return () => { clearTimeout(t); t = setTimeout(fn, ms); }; }
+
+  // ---------------- share image and video frames ----------------
+  // 1200 x 1200 square at 2x. With a year before the data year it becomes a time-lapse frame.
+  function composeSquare(opts = {}) {
+    const Sx = opts.scale || 2, W = 1200, H = 1200, pad = 56, yr = opts.year ?? year, md = opts.mode ?? mode;
+    const cv = document.createElement("canvas"); cv.width = W * Sx; cv.height = H * Sx;
+    const c = cv.getContext("2d"); c.scale(Sx, Sx);
+    const font = (w, px) => `${w} ${px}px system-ui, -apple-system, "Segoe UI", sans-serif`;
+    c.fillStyle = colors.surface; c.fillRect(0, 0, W, H);
+    const s = scope.s, nm = scope.ab ? S.state_names[scope.ab] : "U.S.";
+    const timelapse = yr < asOf, rem = md === "removals" && R;
+    const rs = rem ? (s.removals || S.national.removals) : null;
+    c.fillStyle = colors["--muted"]; c.font = font(600, 18);
+    c.fillText(scope.ab ? "DAMS IN " + S.state_names[scope.ab].toUpperCase() : "AMERICA'S DAMS", pad, pad + 10);
+    let yc;
+    const fitFont = (text, weight, size, maxW, min = 30) => {
+      let px = size; c.font = font(weight, px);
+      while (px > min && c.measureText(text).width > maxW) { px -= 2; c.font = font(weight, px); }
+    };
+    // one line if it fits at 42px or more, otherwise wrap at 50px; returns the next y
+    const headline = (text) => {
+      const maxW = W - 2 * pad;
+      c.fillStyle = colors.ink; fitFont(text, 650, 50, maxW, 42);
+      if (c.measureText(text).width <= maxW) { c.fillText(text, pad, pad + 78); return pad + 78 + 46; }
+      c.font = font(650, 50);
+      const lines = wrap(c, text, maxW);
+      lines.forEach((ln, k) => c.fillText(ln, pad, pad + 78 + k * 60));
+      return pad + 78 + (lines.length - 1) * 60 + 46;
+    };
+    if (timelapse) {
+      const title = rem ? (scope.ab ? nm + "'s dams, built and removed" : "America's dams, built and removed")
+                        : (scope.ab ? "Building " + nm + "'s dams" : "Building America's dams");
+      c.fillStyle = colors.ink; fitFont(title, 650, 50, W - 2 * pad - 280); c.fillText(title, pad, pad + 78);
+      c.fillStyle = colors["--ink-2"]; c.font = font(400, 24);
+      c.fillText(rem ? "Gray: dams standing. Larger teal dots: dams removed." : "Each dot is a dam, shown in the year it was completed", pad, pad + 124);
+      const cnt = scope.cum[Math.max(0, yr - 1600)];
+      c.textAlign = "right"; c.fillStyle = colors.ink; c.font = font(700, 88); c.fillText(String(yr), W - pad, pad + 84);
+      c.fillStyle = colors["--ink-2"]; c.font = font(400, 22);
+      c.fillText(rem ? fmt(cnt) + " built · " + fmt(scope.rcum[Math.max(0, yr - 1600)]) + " removed" : fmt(cnt) + " dams", W - pad, pad + 124);
+      c.textAlign = "left";
+      yc = pad + 146;
+    } else if (rem) {
+      const rank = scope.ab ? removalRank(scope.ab) : null;
+      const head = !scope.ab ? `${fmt(rs.n)} U.S. dams have been removed since 1912.`
+        : rs.n === 0 ? `No dam removals are recorded in ${nm}.`
+        : `${nm} has removed ${fmt(rs.n)} dams${rank === 1 ? ", more than any other state." : "."}`;
+      yc = headline(head);
+      c.fillStyle = colors["--ink-2"]; c.font = font(400, 24);
+      if (rs.n) c.fillText(`${fmt(rs.since2000)} of them since 2000. The busiest year was ${rs.peak_year}, with ${fmt(rs.peak_n)}.`, pad, yc);
+      yc += 22;
+    } else {
+      yc = headline(`The typical ${nm} dam is ${s.median_age} years old.`);
+      c.fillStyle = colors["--ink-2"]; c.font = font(400, 24);
+      c.fillText(`${fmtPct(s.pct_over50_now)} are 50 or older today. By 2035, ${fmtPct(s.pct_over50_2035)} will be.`, pad, yc);
+      yc += 22;
+    }
+    // legend
+    let lx = pad; yc += 26; c.font = font(400, 19);
+    for (const k of classesFor(md)) {
+      if (timelapse && k.label === "Year unknown") continue;
+      c.beginPath(); c.arc(lx + 7, yc - 6, 7, 0, 2 * Math.PI); c.fillStyle = colors[k.v]; c.fill();
+      c.fillStyle = colors["--ink-2"]; c.fillText(k.label, lx + 20, yc); lx += 20 + c.measureText(k.label).width + 24;
+    }
+    // map
+    const mapTop = yc + 14, mapW = W - 2 * pad + 40, mapH = Math.round(mapW * MH / MW);
+    const mc = document.createElement("canvas"); mc.width = mapW * Sx; mc.height = mapH * Sx;
+    const v = opts.view || (scope.ab ? view : { x0: 0, y0: 0, k: 1 });
+    drawMapTo(mc.getContext("2d"), mc.width, mc.height, v, { year: yr, mode: md, stIdx: scope.stIdx, dotScale: 1.25, flash: timelapse, dpr: Sx });
+    c.drawImage(mc, pad - 20, mapTop, mapW, mapH);
+    // bottom strip: removals per year in removals mode, otherwise dams per decade
+    const footLines = rem ? 2 : 1;
+    const sTop = mapTop + mapH + 14, sBottom = H - pad - 50 - (footLines - 1) * 22, sH = sBottom - sTop - 24;
+    if (rem && sH > 40) {
+      const from = S.removals.chart_from, vals = rs.per_year, mx = Math.max(1, ...vals), cw = (W - 2 * pad) / vals.length;
+      c.fillStyle = colors["--ink-2"]; c.font = font(400, 17); c.fillText(`Dam removals per year, ${from}–${from + vals.length - 1}`, pad, sTop + 12);
+      vals.forEach((val, i) => {
+        const h = (val / mx) * sH, future = timelapse && from + i > yr;
+        c.globalAlpha = future ? 0.18 : 1; c.fillStyle = colors["--removed"];
+        c.fillRect(pad + i * cw + 1, sBottom - h, Math.max(1.5, cw - 2), h);
+      });
+      c.globalAlpha = 1; c.fillStyle = colors["--axis"]; c.fillRect(pad, sBottom, W - 2 * pad, 1);
+      c.fillStyle = colors["--muted"]; c.font = font(400, 14);
+      c.fillText(String(from), pad, sBottom + 18); c.textAlign = "right"; c.fillText(String(from + vals.length - 1), W - pad, sBottom + 18); c.textAlign = "left";
+    } else if (sH > 40) {
+      c.fillStyle = colors["--ink-2"]; c.font = font(400, 17); c.fillText("Dams completed per decade", pad, sTop + 12);
+      const vals = s.decades, mx = Math.max(1, ...vals), cw = (W - 2 * pad) / vals.length;
+      vals.forEach((val, i) => {
+        const h = (val / mx) * sH, sofar = timelapse ? decadeSoFar(i, yr) : val, hs = (sofar / mx) * sH;
+        c.fillStyle = colors["--series"];
+        if (sofar < val) { c.globalAlpha = 0.18; c.fillRect(pad + i * cw + 2, sBottom - h, Math.max(2, cw - 4), h); }
+        c.globalAlpha = 1; if (hs > 0) c.fillRect(pad + i * cw + 2, sBottom - hs, Math.max(2, cw - 4), hs);
+      });
+      c.globalAlpha = 1; c.fillStyle = colors["--axis"]; c.fillRect(pad, sBottom, W - 2 * pad, 1);
+      c.fillStyle = colors["--muted"]; c.font = font(400, 14);
+      c.fillText("1850s", pad + cw, sBottom + 18); c.textAlign = "right"; c.fillText(S.decade_labels[S.decade_labels.length - 1], W - pad, sBottom + 18); c.textAlign = "left";
+    }
+    c.fillStyle = colors["--muted"]; c.font = font(400, 17);
+    if (rem) {
+      c.fillText("Data: National Inventory of Dams (USACE), " + fmtDate(S.date) + "; American Rivers Dam Removal Database", pad, H - pad - 12);
+      c.fillText("(CC BY 4.0), doi.org/10.6084/m9.figshare.5234068", pad, H - pad + 10);
+    } else {
+      c.fillText("Data: National Inventory of Dams (USACE), " + fmtDate(S.date), pad, H - pad + 10);
+    }
+    c.textAlign = "right"; c.fillStyle = colors["--ink-2"]; c.font = font(600, 18);
+    c.fillText("Shantanu Bhide · shantanubhide.com", W - pad, H - pad + 10); c.textAlign = "left";
+    return cv;
+  }
+
+  function wrap(c, text, maxW) {
+    const words = text.split(" "), out = []; let line = "";
+    for (const w of words) { const t = line ? line + " " + w : w; if (c.measureText(t).width > maxW && line) { out.push(line); line = w; } else line = t; }
+    if (line) out.push(line); return out;
+  }
+
+  function saveImage() {
+    composeSquare().toBlob((png) => {
+      const a = document.createElement("a"); a.href = URL.createObjectURL(png);
+      a.download = "americas-dams-" + (scope.ab || "us") + "-" + mode + "-" + year + ".png";
+      document.body.append(a); a.click(); a.remove();
+    }, "image/png");
+  }
+
+  // used by the video script; harmless for visitors
+  window.__dams = { composeSquare: (o) => composeSquare(o).toDataURL("image/png"), setScope: (ab) => setScope(ab) };
+})();
+</script>
+</body>
+</html>
